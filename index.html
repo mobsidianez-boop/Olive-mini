@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オリーブ検定mini</title>
+  
+  <!-- Lucide Icons の読み込み -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- スタイリッシュなフォントの読み込み (Quicksandはスコア用, Montserratは既存用) -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #10B981; 
+      --primary-dark: #047857;
+      --primary-light: #ECFDF5;
+      --accent: #F59E0B;
+      --text: #1F2937;
+      --text-muted: #6B7280;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --correct: #059669;
+      --correct-bg: #D1FAE5;
+      --wrong: #E11D48;
+      --wrong-bg: #FFE4E6;
+      --border: #E2E8F0;
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      background: var(--card-bg);
+      max-width: 600px;
+      width: 100%;
+      border-radius: var(--radius);
+      box-shadow: 0 15px 35px rgba(4, 120, 87, 0.2);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* === Lucide Icon 用のユーティリティクラス === */
+    .lucide {
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .icon-xs { width: 14px; height: 14px; stroke-width: 3; }
+    .icon-sm { width: 18px; height: 18px; stroke-width: 2.5; }
+    .icon-md { width: 22px; height: 22px; stroke-width: 2.5; }
+    .icon-lg { width: 26px; height: 26px; stroke-width: 2; }
+    .icon-xl { width: 32px; height: 32px; stroke-width: 2; }
+
+    /* 演出用スクリーン */
+    #splashScreen {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #FFFFFF;
+      z-index: 100;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.35s ease, visibility 0.35s;
+    }
+    #splashScreen.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    .splash-logo-wrap {
+      width: 310px; height: 290px; margin-bottom: 0px;
+      filter: drop-shadow(0 14px 28px rgba(4, 120, 87, 0.25)); position: relative;
+    }
+    .splash-svg-icon { width: 100%; height: 100%; }
+    .splash-oricchi {
+      position: absolute; top: 31%; left: 50%; width: 90px; height: 90px;
+      transform: translate(-50%, -50%); z-index: 10;
+      animation: popOliveHTML 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.95s both;
+    }
+    @keyframes popOliveHTML {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      70% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    .pop-simple { animation: popSimple 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important; }
+    @keyframes popSimple { 0% { transform: scale(0.6); opacity: 0; } 75% { transform: scale(1.06); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+    .splash-title-group { text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .splash-sub { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 0.85rem; font-weight: 900; color: var(--text-muted); margin-top: -10px; letter-spacing: 3px; opacity: 0; transform: translateY(10px); }
+    .splash-sub.play { animation: textSlideUp 0.5s ease 1.6s forwards; }
+    .splash-sub.pop-simple-sub { animation: textSlideUp 0.3s ease 0.2s forwards !important; }
+    .splash-skip-tip { position: absolute; bottom: 24px; font-size: 0.75rem; color: #A0AEC0; letter-spacing: 0.5px; }
+
+    .play-build .gear-layer-1 { transform-box: fill-box; transform-origin: center center; animation: spinGear1 0.7s cubic-bezier(0.34, 1.4, 0.64, 1) forwards; }
+    .play-build .gear-layer-2 { transform-box: fill-box; transform-origin: center center; animation: spinGear2 0.75s cubic-bezier(0.34, 1.4, 0.64, 1) 0.1s both; }
+    .play-build .gear-layer-3 { transform-box: fill-box; transform-origin: center center; animation: spinGear3 0.8s cubic-bezier(0.34, 1.4, 0.64, 1) 0.2s both; }
+    @keyframes spinGear1 { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+    @keyframes spinGear2 { 0% { transform: scale(0) rotate(180deg); opacity: 0; } 100% { transform: scale(1) rotate(30deg); opacity: 1; } }
+    @keyframes spinGear3 { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 100% { transform: scale(1) rotate(60deg); opacity: 1; } }
+
+    .play-build .ribbon-anim { transform-box: fill-box; transform-origin: top center; animation: growRibbon 0.45s cubic-bezier(0.34, 1.3, 0.64, 1) 0.65s both; }
+    @keyframes growRibbon { 0% { transform: scaleY(0); opacity: 0; } 100% { transform: scaleY(1); opacity: 1; } }
+
+    .play-build .crest-anim { transform-box: fill-box; transform-origin: center center; animation: popOlive 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.95s both; }
+    @keyframes popOlive { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+    .play-build .title-banner-anim { transform-box: fill-box; transform-origin: center center; animation: slideInText 0.45s cubic-bezier(0.22, 1, 0.36, 1) 1.25s both; }
+    @keyframes slideInText { 0% { transform: scaleX(0.5) translateY(12px); opacity: 0; } 100% { transform: scaleX(1) translateY(0); opacity: 1; } }
+    @keyframes textSlideUp { to { opacity: 1; transform: translateY(0); } }
+
+    /* アプリ内ヘッダー */
+    header { background: var(--primary); color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .header-logo-group { display: flex; align-items: center; gap: 12px; }
+    
+    .header-svg-container { position: relative; width: 44px; height: 44px; }
+    .header-svg-icon { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    .header-oricchi { position: absolute; top: 50%; left: 50%; width: 42px; height: 42px; transform: translate(-50%, -50%); z-index: 10; }
+
+    .header-title { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-weight: 900; font-size: 1.2rem; color: #FFFFFF; display: flex; align-items: center; position: relative; text-shadow: 0 1px 3px rgba(4, 120, 87, 0.6), 0 0 1px rgba(0,0,0,0.3); }
+    .header-title span { position: relative; z-index: 2; }
+    .header-title::after { content: ""; position: absolute; top: 52%; left: -6%; width: 112%; height: 2px; background: linear-gradient(90deg, #FDE047, #F59E0B, #FEF08A); transform: translateY(-50%); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); pointer-events: none; z-index: 1; }
+
+    .sound-btn { background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; z-index: 10; }
+
+    .screen { padding: 24px; display: none; }
+    .screen.active { display: block; }
+
+    .start-content { text-align: center; padding: 12px 4px 8px; }
+    .start-title { font-size: 1.55rem; font-weight: 900; color: var(--primary-dark); margin-bottom: 20px; letter-spacing: -0.5px; }
+    .section-label { font-weight: bold; font-size: 0.85rem; color: var(--text-muted); display: block; text-align: left; margin-bottom: 8px; }
+
+    .mode-selection { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .mode-card { background: white; border: 2px solid var(--border); border-radius: 12px; padding: 13px 16px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+    .mode-card:hover { border-color: var(--primary); }
+    .mode-card.selected { border-color: var(--primary); background: var(--primary-light); }
+    .mode-icon { color: var(--primary-dark); flex-shrink: 0; }
+    .mode-info-title { font-weight: bold; font-size: 0.95rem; color: var(--text); }
+    .mode-info-desc { font-size: 0.76rem; color: var(--text-muted); margin-top: 2px; }
+
+    .count-selection { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+    .count-btn { background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 4px; font-weight: bold; font-size: 0.85rem; cursor: pointer; color: var(--text); transition: all 0.2s; }
+    .count-btn.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary-dark); }
+
+    .primary-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--primary); color: white; border: none; width: 100%; padding: 14px; border-radius: 10px; font-size: 1.05rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: background 0.2s, transform 0.1s; }
+    .primary-btn:hover { background: var(--primary-dark); }
+    .primary-btn:active { transform: scale(0.98); }
+
+    /* === クイズ画面 === */
+    .quiz-header { display: flex; flex-direction: column; margin-bottom: 12px; font-size: 0.85rem; color: var(--text-muted); }
+    .quiz-header-top { display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 8px; }
+    
+    .badge-category { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; background: var(--primary-light); color: var(--primary-dark); font-weight: bold; font-size: 0.8rem; }
+    
+    .retire-btn { background: var(--wrong); color: white; border: none; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: background 0.2s; }
+    .retire-btn:hover { background: #BE123C; }
+
+    .quiz-score-tracker { display: flex; gap: 12px; background: #F1F5F9; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
+    .tracker-correct { display: inline-flex; align-items: center; gap: 4px; color: var(--correct); }
+    .tracker-wrong { display: inline-flex; align-items: center; gap: 4px; color: var(--wrong); }
+
+    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+    .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+    
+    .question-title { font-size: 1.15rem; font-weight: 700; line-height: 1.5; color: var(--text); margin-bottom: 18px; }
+    .options-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .option-btn { background: white; border: 1.5px solid var(--border); padding: 13px 16px; border-radius: 10px; font-size: 0.95rem; color: var(--text); cursor: pointer; text-align: left; transition: all 0.15s ease; display: flex; align-items: center; gap: 12px; line-height: 1.4; }
+    .option-btn:hover:not(:disabled) { background: var(--primary-light); border-color: var(--primary); }
+    .option-num { background: #F1F5F9; color: #475569; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; flex-shrink: 0; }
+    
+    .option-btn.correct { background: var(--correct-bg) !important; border-color: var(--correct) !important; color: var(--correct); font-weight: bold; }
+    .option-btn.correct .option-num { background: var(--correct); color: white; }
+    .option-btn.wrong { background: var(--wrong-bg) !important; border-color: var(--wrong) !important; color: var(--wrong); }
+    .option-btn.wrong .option-num { background: var(--wrong); color: white; }
+
+    /* === アニメーション系 === */
+    .anim-correct-shine { animation: correctShine 0.9s ease-out; }
+    @keyframes correctShine { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8); background-color: var(--correct); color: white; transform: scale(1); } 30% { box-shadow: 0 0 20px 8px rgba(16, 185, 129, 0.5); background-color: var(--correct); color: white; transform: scale(1.03); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); background-color: var(--correct-bg); color: var(--correct); transform: scale(1); } }
+    .anim-correct-shine .option-num { animation: numShine 0.9s ease-out; }
+    @keyframes numShine { 0%, 30% { background: white; color: var(--correct); } 100% { background: var(--correct); color: white; } }
+    .anim-wrong-shake { animation: wrongShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes wrongShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px) rotate(-1deg); } 40%, 80% { transform: translateX(6px) rotate(1deg); } }
+    .anim-screen-droop { animation: screenDroop 0.5s ease-out; }
+    @keyframes screenDroop { 0% { transform: translateY(0); filter: grayscale(0%); } 30% { transform: translateY(8px); filter: grayscale(40%); } 100% { transform: translateY(0); filter: grayscale(0%); } }
+
+    .feedback-box { display: none; background: var(--bg); border-radius: 10px; padding: 16px; border-left: 4px solid var(--primary); margin-bottom: 18px; animation: fadeIn 0.2s ease-in-out; }
+    .feedback-status { font-weight: bold; font-size: 1.05rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .feedback-status.is-correct { color: var(--correct); }
+    .feedback-status.is-wrong { color: var(--wrong); }
+    .feedback-text { font-size: 0.9rem; line-height: 1.5; color: #334155; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* --- キャラクター画像とメダル装飾の設定 --- */
+    .character-img { width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 4; border-radius: 50%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); }
+    
+    /* スタート画面のキャラはそのまま */
+    .start-character-wrap { width: 100px; height: 100px; margin: 10px auto 20px; position: relative; display: flex; justify-content: center; align-items: center; animation: floatChar 3s ease-in-out infinite; }
+    
+    /* === 結果画面のメダルコンテナ === */
+    #resultCharacterWrap { 
+      width: 280px; height: 280px; /* 超特大サイズまで収容 */
+      margin: 10px auto 20px; 
+      position: relative; display: flex; justify-content: center; align-items: center; 
+    }
+    /* メダルコア(r=75)にぴったり収まるサイズに調整 (おりっちサイズ拡大: 140px) */
+    #resultCharacterWrap .character-img {
+      width: 140px; height: 140px;
+    }
+    
+    .deco-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; display: none; pointer-events: none; }
+    
+    /* メダルランクに応じた表示制御 (allとstdの区別なく同じSVGを表示) */
+    .character-wrap.show-perfect-std .deco-gold,
+    .character-wrap.show-perfect-all .deco-gold { display: block; }
+
+    .character-wrap.show-good-std .deco-silver,
+    .character-wrap.show-good-all .deco-silver { display: block; }
+
+    .character-wrap.show-fair-std .deco-bronze,
+    .character-wrap.show-fair-all .deco-bronze { display: block; }
+
+    .character-wrap.show-bad-std .deco-iron,
+    .character-wrap.show-bad-all .deco-iron { display: block; }
+
+    .char-bounce { animation: charBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+    @keyframes charBounce { 0% { transform: scale(0.3) translateY(20px); opacity: 0; } 50% { transform: scale(1.1) translateY(-10px); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+    .char-shake { animation: charShake 0.5s ease-in-out both; }
+    @keyframes charShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+    .char-droop { animation: charDroop 1s ease-out both; }
+    @keyframes charDroop { 0% { transform: translateY(-20px) scale(1.05); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+    @keyframes floatChar { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+    
+    /* === スコア・称号表示 === */
+    .result-score-info { position: relative; z-index: 10; margin-top: -10px; margin-bottom: 16px; }
+    
+    /* === Quicksandフォント＆影なし単色デザイン === */
+    .score-num { 
+      font-size: 4.5rem; 
+      font-weight: 700; 
+      line-height: 1; 
+      display: inline-block;
+      font-family: 'Quicksand', 'Avenir Next', 'Helvetica Neue', sans-serif;
+      letter-spacing: -2px;
+    }
+    
+    .score-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; display: block; font-weight: bold; }
+    .rank-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+    /* メダルカラー定義 (同系色の単色フラット) */
+    .text-gold { color: #F59E0B; }
+    .text-silver { color: #64748B; }
+    .text-bronze { color: #B45309; }
+    .text-iron { color: #4B5563; }
+    
+    .medal-gold { --m-light: #FDE047; --m-base: #F59E0B; --m-dark: #D97706; --m-xdark: #92400E; }
+    .medal-silver { --m-light: #F8FAFC; --m-base: #CBD5E1; --m-dark: #94A3B8; --m-xdark: #475569; }
+    .medal-bronze { --m-light: #FDBA74; --m-base: #D97706; --m-dark: #9A3412; --m-xdark: #7C2D12; }
+    .medal-iron { --m-light: #D1D5DB; --m-base: #9CA3AF; --m-dark: #6B7280; --m-xdark: #374151; }
+
+    .result-content { text-align: center; position: relative; }
+    #confettiCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+    .result-msg { font-size: 1.25rem; font-weight: bold; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .result-submsg { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4; padding: 0 10px;}
+    .review-list { text-align: left; margin-bottom: 20px; max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; background: #FFFFFF; }
+    .review-item { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .review-item:last-child { border-bottom: none; }
+    .review-q { font-weight: bold; color: var(--text); margin-bottom: 4px; display: flex; align-items: flex-start; gap: 6px; }
+    .review-ans { color: var(--correct); padding-left: 20px; }
+    .review-exp { color: #718096; margin-top: 4px; padding-left: 20px; line-height: 1.4; }
+
+    /* === カスタム確認モーダル === */
+    .modal-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(17, 24, 39, 0.5); 
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    
+    .modal-content {
+      background: #FFFFFF;
+      width: 85%; max-width: 340px;
+      border-radius: 16px; padding: 24px; text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      transform: translateY(20px) scale(0.95);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .modal-overlay.active .modal-content { transform: translateY(0) scale(1); }
+    
+    .modal-icon {
+      background: #FEF3C7; color: #D97706;
+      width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .modal-title { font-size: 1.1rem; font-weight: bold; color: var(--text); margin-bottom: 8px; }
+    .modal-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 24px; white-space: pre-wrap; }
+    .modal-actions { display: flex; gap: 12px; }
+    
+    .modal-btn-cancel, .modal-btn-confirm {
+      flex: 1; padding: 12px; border-radius: 10px; font-size: 0.95rem; font-weight: bold; cursor: pointer; border: none; transition: background 0.2s, transform 0.1s;
+    }
+    .modal-btn-cancel { background: #F1F5F9; color: #475569; }
+    .modal-btn-cancel:hover { background: #E2E8F0; }
+    .modal-btn-cancel:active { transform: scale(0.98); }
+    .modal-btn-confirm { background: var(--wrong); color: white; }
+    .modal-btn-confirm:hover { background: #BE123C; }
+    .modal-btn-confirm:active { transform: scale(0.98); }
+  </style>
+</head>
+<body>
+
+<!-- メダルの金属グラデーション定義 (スプラッシュスクリーンやヘッダーロゴ用) -->
+<svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- 金色金属 -->
+    <linearGradient id="metal-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF7B0"/>
+      <stop offset="25%" stop-color="#FDE047"/>
+      <stop offset="50%" stop-color="#D97706"/>
+      <stop offset="75%" stop-color="#FEF08A"/>
+      <stop offset="100%" stop-color="#78350F"/>
+    </linearGradient>
+    <linearGradient id="metal-gold-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D97706"/><stop offset="50%" stop-color="#78350F"/><stop offset="100%" stop-color="#451A03"/>
+    </linearGradient>
+    <!-- 銀色金属 -->
+    <linearGradient id="metal-silver" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F1F5F9"/><stop offset="25%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#94A3B8"/><stop offset="75%" stop-color="#E2E8F0"/><stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+    <linearGradient id="metal-silver-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8"/><stop offset="50%" stop-color="#475569"/><stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <!-- 銅色金属 -->
+    <linearGradient id="metal-bronze" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDBA74"/><stop offset="25%" stop-color="#FFEDD5"/>
+      <stop offset="50%" stop-color="#B45309"/><stop offset="75%" stop-color="#FED7AA"/><stop offset="100%" stop-color="#7C2D12"/>
+    </linearGradient>
+    <linearGradient id="metal-bronze-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C2410C"/><stop offset="50%" stop-color="#7C2D12"/><stop offset="100%" stop-color="#431407"/>
+    </linearGradient>
+    <!-- 鉄/くすんだ金属 -->
+    <linearGradient id="metal-iron" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9CA3AF"/><stop offset="25%" stop-color="#E5E7EB"/>
+      <stop offset="50%" stop-color="#4B5563"/><stop offset="75%" stop-color="#D1D5DB"/><stop offset="100%" stop-color="#1F2937"/>
+    </linearGradient>
+    <linearGradient id="metal-iron-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4B5563"/><stop offset="50%" stop-color="#1F2937"/><stop offset="100%" stop-color="#030712"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="container">
+
+  <!-- 演出用スクリーン -->
+  <div id="splashScreen">
+    <div class="splash-logo-wrap" id="logoWrap">
+      <svg class="splash-svg-icon" viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg">
+        <g class="ribbon-anim">
+          <path d="M70,95 L55,165 L75,150 L90,170 L95,95 Z" fill="url(#metal-gold-dark)" stroke="#78350F" stroke-width="1.5"/>
+          <path d="M130,95 L145,165 L125,150 L110,170 L105,95 Z" fill="url(#metal-gold-dark)" stroke="#78350F" stroke-width="1.5"/>
+        </g>
+        <g>
+          <rect class="gear-layer-1" x="52" y="17" width="96" height="96" fill="url(#metal-gold)" rx="4"/>
+          <rect class="gear-layer-2" x="52" y="17" width="96" height="96" fill="url(#metal-gold)" rx="4"/>
+          <rect class="gear-layer-3" x="52" y="17" width="96" height="96" fill="url(#metal-gold)" rx="4"/>
+        </g>
+        <!-- 中央の紋章枠 -->
+        <g class="crest-anim">
+          <circle cx="100" cy="65" r="42" fill="#064E3B" />
+          <circle cx="100" cy="65" r="38" fill="none" stroke="url(#metal-gold)" stroke-width="4"/>
+        </g>
+        <g class="title-banner-anim">
+          <path d="M 2,170 L 20,100 L 198,100 L 180,170 Z" fill="rgba(255, 255, 255, 0.95)" stroke="url(#metal-gold)" stroke-width="2"/>
+          <g>
+            <line x1="10" y1="129" x2="185" y2="129" stroke="#10B981" stroke-width="2" />
+            <line x1="80" y1="121" x2="175" y2="121" stroke="#059669" stroke-width="1.2" />
+            <line x1="15" y1="137" x2="80" y2="137" stroke="#10B981" stroke-width="0.8" />
+            <polygon points="120,129 128,111 124,129" fill="#10B981" />
+            <polygon points="150,121 158,105 154,121" fill="#059669" />
+            <polygon points="65,129 70,117 68,129" fill="#10B981" />
+            <line x1="156" y1="157" x2="190" y2="157" stroke="#10B981" stroke-width="1.2" />
+            <line x1="165" y1="165" x2="182" y2="149" stroke="#10B981" stroke-width="0.8" />
+          </g>
+          <g font-family="'Hiragino Mincho ProN', 'Yu Mincho', 'MS Mincho', serif" font-weight="900" fill="#111111">
+            <text x="25" y="147" font-size="22" transform="rotate(-5 25 147)">オ</text>
+            <text x="48" y="143" font-size="21" transform="rotate(4 48 143)">リ</text>
+            <text x="70" y="149" font-size="23" transform="rotate(-6 70 149)">ー</text>
+            <text x="94" y="145" font-size="24" transform="rotate(3 94 145)">ブ</text>
+            <text id="animTextPart1" x="124" y="150" font-size="26" transform="rotate(-4 124 150)">検</text>
+            <text id="animTextPart2" x="154" y="146" font-size="27" transform="rotate(5 154 146)">定</text>
+            <text x="162" y="163" font-size="11" font-style="italic" letter-spacing="1">MINI</text>
+          </g>
+        </g>
+      </svg>
+      <div class="splash-oricchi">
+        <img src="good.png" class="character-img" alt="おりっち">
+      </div>
+    </div>
+    <div class="splash-title-group"><p class="splash-sub" id="animSubText">OLIVE KENTEI</p></div>
+    <div class="splash-skip-tip">タップしてスキップ</div>
+  </div>
+
+  <!-- 常設ヘッダー -->
+  <header>
+    <div class="header-logo-group">
+      <div class="header-svg-container">
+        <svg class="header-svg-icon" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(80, 80)">
+            <path d="M-30,30 L-45,100 L-25,90 L-10,105 L-5,30 Z" fill="url(#metal-gold-dark)" stroke="#78350F" stroke-width="1.5"/>
+            <path d="M30,30 L45,100 L25,90 L10,105 L5,30 Z" fill="url(#metal-gold-dark)" stroke="#78350F" stroke-width="1.5"/>
+            <rect x="-48" y="-48" width="96" height="96" fill="url(#metal-gold)" rx="4"/>
+            <rect x="-48" y="-48" width="96" height="96" fill="url(#metal-gold)" transform="rotate(30)" rx="4"/>
+            <rect x="-48" y="-48" width="96" height="96" fill="url(#metal-gold)" transform="rotate(60)" rx="4"/>
+            <circle r="40" fill="#064E3B" />
+            <circle r="36" fill="none" stroke="url(#metal-gold)" stroke-width="4"/>
+          </g>
+        </svg>
+        <div class="header-oricchi">
+          <img src="good.png" class="character-img" alt="おりっち">
+        </div>
+      </div>
+      
+      <div class="header-title" id="headerTitle">
+        <span style="display:inline-block; transform: rotate(-4deg); margin-right:-2px; font-size:1.3rem;">オ</span>
+        <span style="display:inline-block; transform: translateY(2px) rotate(4deg); margin-right:-2px; font-size:1.3rem;">リ</span>
+        <span style="display:inline-block; transform: translateY(-1px) rotate(-6deg); margin-right:-2px; font-size:1.35rem;">ー</span>
+        <span style="display:inline-block; transform: translateY(1px) rotate(3deg); margin-right:1px; font-size:1.4rem;">ブ</span>
+        <span id="hPart1" style="display:inline-block; transform: translateY(-2px) rotate(-4deg); font-size:1.5rem;">検</span>
+        <span id="hPart2" style="display:inline-block; transform: translateY(1px) rotate(5deg); font-size:1.55rem;">定</span>
+        <span style="font-size:0.8rem; margin-left:6px; font-style:italic; transform: rotate(-5deg); display:inline-block;">MINI</span>
+      </div>
+    </div>
+    <button class="sound-btn" id="soundToggleBtn" title="音のON/OFF">
+      <i data-lucide="volume-2" id="soundIcon" class="icon-md"></i>
+    </button>
+  </header>
+
+  <!-- スタート画面 -->
+  <div class="screen active" id="startScreen">
+    <div class="start-content">
+      <div class="start-character-wrap">
+        <img src="good.png" class="character-img" alt="おりっち">
+      </div>
+      <h1 class="start-title">さあ、始めましょう！</h1>
+
+      <span class="section-label">モード（分野）を選択</span>
+      <div class="mode-selection">
+        <div class="mode-card selected" data-mode="history">
+          <span class="mode-icon"><i data-lucide="book-open" class="icon-xl"></i></span>
+          <div>
+            <div class="mode-info-title">オリーブの歴史編</div>
+            <div class="mode-info-desc">栽培起源、小豆島植栽、人物、記念日など</div>
+          </div>
+        </div>
+        <div class="mode-card" data-mode="ecology">
+          <span class="mode-icon"><i data-lucide="leaf" class="icon-xl"></i></span>
+          <div>
+            <div class="mode-info-title">オリーブの生態編</div>
+            <div class="mode-info-desc">花・葉の性質、主要品種、気候適性、病害虫など</div>
+          </div>
+        </div>
+        <div class="mode-card" data-mode="process">
+          <span class="mode-icon"><i data-lucide="droplets" class="icon-xl"></i></span>
+          <div>
+            <div class="mode-info-title">オリーブの加工編</div>
+            <div class="mode-info-desc">新漬け製法、採油法、オイル規格、成分・健康効果など</div>
+          </div>
+        </div>
+      </div>
+
+      <span class="section-label">出題数を選択</span>
+      <div class="count-selection">
+        <button class="count-btn selected" data-count="5">5問</button>
+        <button class="count-btn" data-count="10">10問</button>
+        <button class="count-btn" data-count="all">全問挑戦</button>
+      </div>
+
+      <button class="primary-btn" id="startBtn">検定をスタートする</button>
+    </div>
+  </div>
+
+  <!-- クイズ画面 -->
+  <div class="screen" id="quizScreen">
+    <div class="quiz-header">
+      <div class="quiz-header-top">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span class="badge-category" id="quizModeBadge"></span>
+          <button id="retireBtn" class="retire-btn"><i data-lucide="flag" class="icon-xs"></i> リタイア</button>
+        </div>
+        <div class="quiz-score-tracker">
+          <span class="tracker-correct"><i data-lucide="circle" class="icon-sm"></i> <span id="trackCorrect">0</span></span>
+          <span class="tracker-wrong" style="margin-left: 8px;"><i data-lucide="x" class="icon-sm"></i> <span id="trackWrong">0</span></span>
+        </div>
+      </div>
+      <div style="width: 100%; text-align: right;">
+        <span id="quizProgressText">第 1 問 / 5問</span>
+      </div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <h2 class="question-title" id="questionText">問題文</h2>
+    <div class="options-grid" id="optionsContainer"></div>
+
+    <div class="feedback-box" id="feedbackBox">
+      <div class="feedback-status" id="feedbackStatus">正解！</div>
+      <div class="feedback-text" id="feedbackText">解説文</div>
+    </div>
+
+    <button class="primary-btn" id="nextBtn" style="display: none;">次へ進む</button>
+  </div>
+
+  <!-- 結果画面 -->
+  <div class="screen" id="resultScreen">
+    <div class="result-content">
+      <canvas id="confettiCanvas"></canvas>
+      
+      <!-- === モダン・オリンピック・レイヤーメダルの定義 (コア拡大・リング細化版) === -->
+      <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+        <defs>
+          <!-- 【0層目】メダルコア (半径45→75に超拡大！) -->
+          <g id="medal-core">
+            <circle cx="150" cy="150" r="75" fill="var(--m-base)" />
+            <circle cx="150" cy="150" r="75" fill="none" stroke="var(--m-light)" stroke-width="3" />
+            <circle cx="150" cy="150" r="71" fill="none" stroke="var(--m-xdark)" stroke-width="2" opacity="0.3"/>
+          </g>
+
+          <!-- 【1層目】パリ五輪風 放射状プリーツ (厚さ30→20にスリム化) -->
+          <g id="medal-layer1">
+            <circle cx="150" cy="150" r="95" fill="var(--m-base)" />
+            <circle cx="150" cy="150" r="85" fill="none" stroke="var(--m-light)" stroke-width="20" stroke-dasharray="6.5 8.335" stroke-dashoffset="0" />
+            <circle cx="150" cy="150" r="85" fill="none" stroke="var(--m-dark)" stroke-width="20" stroke-dasharray="6.5 8.335" stroke-dashoffset="-6.5" />
+            <circle cx="150" cy="150" r="95" fill="none" stroke="var(--m-xdark)" stroke-width="2" opacity="0.4"/>
+          </g>
+
+          <!-- 【2層目用のパーツ】彫金風オリーブの葉 (幅に合わせて縮小) -->
+          <g id="single-leaf">
+            <path d="M 150 53 C 140 43, 145 35, 155 33 C 165 31, 170 41, 150 53 Z" fill="var(--m-light)" />
+            <path d="M 150 53 C 145 48, 150 40, 155 33 C 158 40, 155 48, 150 53 Z" fill="var(--m-dark)" />
+            <circle cx="145" cy="40" r="2.5" fill="var(--m-xdark)" opacity="0.6"/>
+          </g>
+
+          <!-- 【2層目】クラシック・オリーブリース枠 (厚さ30→20にスリム化) -->
+          <g id="medal-layer2">
+            <circle cx="150" cy="150" r="115" fill="var(--m-base)" />
+            <circle cx="150" cy="150" r="113" fill="none" stroke="var(--m-light)" stroke-width="4" opacity="0.5"/>
+            <circle cx="150" cy="150" r="97" fill="none" stroke="var(--m-dark)" stroke-width="4" opacity="0.5"/>
+            <!-- 葉っぱを30度ごとに配置 -->
+            <use href="#single-leaf" transform="rotate(0 150 150)" />
+            <use href="#single-leaf" transform="rotate(30 150 150)" />
+            <use href="#single-leaf" transform="rotate(60 150 150)" />
+            <use href="#single-leaf" transform="rotate(90 150 150)" />
+            <use href="#single-leaf" transform="rotate(120 150 150)" />
+            <use href="#single-leaf" transform="rotate(150 150 150)" />
+            <use href="#single-leaf" transform="rotate(180 150 150)" />
+            <use href="#single-leaf" transform="rotate(210 150 150)" />
+            <use href="#single-leaf" transform="rotate(240 150 150)" />
+            <use href="#single-leaf" transform="rotate(270 150 150)" />
+            <use href="#single-leaf" transform="rotate(300 150 150)" />
+            <use href="#single-leaf" transform="rotate(330 150 150)" />
+            <circle cx="150" cy="150" r="115" fill="none" stroke="var(--m-xdark)" stroke-width="2" opacity="0.4"/>
+          </g>
+
+          <!-- 【3層目用のパーツ】東京五輪風 波打つスワール (幅に合わせて調整) -->
+          <g id="wave-swirl">
+            <!-- なだらかな波の曲線を描画 -->
+            <path d="M 150 15 C 200 15, 240 30, 270 90 C 240 50, 190 35, 150 35 Z" fill="var(--m-light)" opacity="0.9"/>
+            <path d="M 150 35 C 185 35, 220 50, 245 80 C 220 55, 170 40, 150 45 Z" fill="var(--m-dark)" opacity="0.7"/>
+          </g>
+
+          <!-- 【3層目】東京五輪風 ウェーブ枠 (厚さ30→20にスリム化) -->
+          <g id="medal-layer3">
+            <circle cx="150" cy="150" r="135" fill="var(--m-base)" />
+            <circle cx="150" cy="150" r="133" fill="none" stroke="var(--m-light)" stroke-width="4" opacity="0.4"/>
+            <!-- 5つの波を72度ごとに配置 -->
+            <use href="#wave-swirl" transform="rotate(0 150 150)" />
+            <use href="#wave-swirl" transform="rotate(72 150 150)" />
+            <use href="#wave-swirl" transform="rotate(144 150 150)" />
+            <use href="#wave-swirl" transform="rotate(216 150 150)" />
+            <use href="#wave-swirl" transform="rotate(288 150 150)" />
+            <circle cx="150" cy="150" r="135" fill="none" stroke="var(--m-xdark)" stroke-width="2" opacity="0.4"/>
+          </g>
+        </defs>
+      </svg>
+      
+      <!-- 結果画面のキャラクターとメダル表示領域 -->
+      <div class="character-wrap" id="resultCharacterWrap">
+        
+        <!-- 【鉄メダル: 0層】コアのみ -->
+        <svg class="deco-svg deco-iron medal-iron" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <use href="#medal-core" />
+        </svg>
+
+        <!-- 【銅メダル: 1層】コア ＋ パリ五輪風放射状プリーツ -->
+        <svg class="deco-svg deco-bronze medal-bronze" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <use href="#medal-layer1" />
+          <use href="#medal-core" />
+        </svg>
+
+        <!-- 【銀メダル: 2層】コア ＋ パリプリーツ ＋ オリーブリース -->
+        <svg class="deco-svg deco-silver medal-silver" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <use href="#medal-layer2" />
+          <use href="#medal-layer1" />
+          <use href="#medal-core" />
+        </svg>
+
+        <!-- 【金メダル: 3層】コア ＋ パリプリーツ ＋ オリーブリース ＋ 東京五輪風ウェーブ -->
+        <svg class="deco-svg deco-gold medal-gold" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <use href="#medal-layer3" />
+          <use href="#medal-layer2" />
+          <use href="#medal-layer1" />
+          <use href="#medal-core" />
+        </svg>
+
+        <img src="" id="resultCharacterImg" class="character-img" alt="おりっち">
+      </div>
+      
+      <div class="result-score-info">
+        <span class="score-num" id="finalScore">80%</span>
+        <span class="score-label" id="finalScoreRatio">4 / 5 問 正解</span>
+      </div>
+      
+      <p class="rank-title" id="rankTitle">称号</p>
+      <h2 class="result-msg" id="resultTitle">合格圏内！</h2>
+      <p class="result-submsg" id="resultDesc">しっかり基礎が身についています。</p>
+
+      <div class="review-list" id="reviewContainer"></div>
+
+      <button class="primary-btn" id="retryBtn">トップに戻る</button>
+    </div>
+  </div>
+
+  <!-- === カスタム確認モーダル === -->
+  <div class="modal-overlay" id="customModal">
+    <div class="modal-content">
+      <div class="modal-icon">
+        <i data-lucide="alert-triangle" class="icon-lg"></i>
+      </div>
+      <h3 class="modal-title" id="modalTitle">確認</h3>
+      <p class="modal-text" id="modalMessage">メッセージ</p>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" id="modalCancelBtn">キャンセル</button>
+        <button class="modal-btn-confirm" id="modalConfirmBtn">OK</button>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+<script>
+  // シャッフル関数
+  function shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  /* 演出アニメーション関係 */
+  const MODE_TITLES = {
+    init:    { p1: "検", p2: "定", sub: "OLIVE KENTEI" },
+    history: { p1: "歴", p2: "史", sub: "HISTORY EDITION" },
+    ecology: { p1: "生", p2: "態", sub: "ECOLOGY EDITION" },
+    process: { p1: "加", p2: "工", sub: "PROCESS EDITION" }
+  };
+
+  const splashScreen = document.getElementById("splashScreen");
+  const logoWrap = document.getElementById("logoWrap");
+  const animTextPart1 = document.getElementById("animTextPart1");
+  const animTextPart2 = document.getElementById("animTextPart2");
+  const animSubText = document.getElementById("animSubText");
+  const hPart1 = document.getElementById("hPart1");
+  const hPart2 = document.getElementById("hPart2");
+
+  let splashTimer = null;
+
+  function triggerAnimation(modeKey, isBuild, onComplete) {
+    const info = MODE_TITLES[modeKey] || MODE_TITLES.init;
+    animTextPart1.textContent = info.p1;
+    animTextPart2.textContent = info.p2;
+    animSubText.textContent = info.sub;
+
+    hPart1.textContent = info.p1;
+    hPart2.textContent = info.p2;
+
+    logoWrap.className = "splash-logo-wrap";
+    animSubText.className = "splash-sub";
+    void logoWrap.offsetWidth;
+
+    if (isBuild) {
+      logoWrap.classList.add("play-build");
+      animSubText.classList.add("play");
+    } else {
+      logoWrap.classList.add("pop-simple");
+      animSubText.classList.add("pop-simple-sub");
+    }
+
+    splashScreen.classList.remove("fade-out");
+
+    const duration = isBuild ? 2600 : 1200;
+
+    clearTimeout(splashTimer);
+    splashTimer = setTimeout(() => {
+      splashScreen.classList.add("fade-out");
+      if (onComplete) onComplete();
+    }, duration);
+
+    splashScreen.onclick = () => {
+      clearTimeout(splashTimer);
+      splashScreen.classList.add("fade-out");
+      if (onComplete) onComplete();
+    };
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    triggerAnimation("init", true);
+  });
+
+  /* =========================================================================
+     過去問データ（R1,R4,R5,R6,R7）重複排除・解説統合の全67問
+  ========================================================================= */
+  const QUESTION_BANK = {
+    history: [
+      { q: "オリーブ栽培の始まりは、約何年前と言われているか", options: ["2,000年前", "4,000年前", "6,000年前", "8,000年前"], answer: 2, exp: "約6,000年前に小アジア地方で始まったというのが現在の定説です。" },
+      { q: "オリーブ栽培の起源と言われている地域はどこか", options: ["ギリシャの島しょ部", "東南アジア地方", "地中海沿岸", "小アジア地方"], answer: 3, exp: "約6,000年前に小アジア地方で始まったというのが定説です。" },
+      { q: "地中海沿岸各地にオリーブを最初に広めたのは、何人と言われているか", options: ["ポルトガル人", "ローマ人", "ギリシャ人", "フェニキヤ人"], answer: 3, exp: "通商・航海術に長けたフェニキヤ人が最初に広めたと言われています。" },
+      { q: "日本に初めてオリーブオイルが持ち込まれたとされている時代はどれか", options: ["鎌倉時代", "室町時代", "安土・桃山時代", "江戸時代"], answer: 2, exp: "約400年前の安土・桃山時代に、ポルトガル人神父が携えてきたと言われています。" },
+      { q: "日本に初めてオリーブオイルが持ち込まれた当時は、何の油と呼ばれていたか", options: ["ボルトの油", "ホルトの油", "トルポの油", "ポルトの油"], answer: 1, exp: "ポルトガル人神父が持ち込んだため「ポルトガルの油」、それがなまって「ホルトの油」と呼ばれました。" },
+      { q: "林洞海の献策によって、日本に初めてオリーブの苗木が導入されたと言われているが、どこの国から輸入したか", options: ["ギリシャ", "ポルトガル", "スペイン", "フランス"], answer: 3, exp: "文久2年および慶応3年に、医薬品用オイル生産を目的にフランスから輸入されました。" },
+      { q: "オリーブオイルの国内自給を推進するきっかけとなったとされている戦争はどれか", options: ["日清戦争", "日露戦争", "太平洋戦争", "日中戦争"], answer: 1, exp: "日露戦争により獲得した漁場で獲れた魚介類の保存・輸送手段（油漬け）として、国内自給が求められました。" },
+      { q: "日本で初めてオリーブオイルの採取及びテーブルオリーブの加工が行われたとされているのはどこか", options: ["鹿児島市", "小豆島", "神戸市", "横須賀市"], answer: 2, exp: "明治15年に神戸オリーブ園（福羽逸人管理）で果実が収穫され、日本初の加工が行われました。" },
+      { q: "日本で初めてオリーブ果実が実ったとされているのはどこの都道府県か", options: ["兵庫県", "和歌山県", "神奈川県", "東京都"], answer: 1, exp: "佐野常民がイタリアから持ち帰り、和歌山に植樹された苗木が順調に育ち初めて実を結びました。" },
+      { q: "明治40年(1907年)に栽培試験地に指定されたのは、3県であり、そのうちの2県は香川県(小豆島)と鹿児島県である。では、残り1県はどこか", options: ["佐賀県", "和歌山県", "福岡県", "三重県"], answer: 3, exp: "農商務省により、三重・香川・鹿児島の3県が指定され、翌年1.2haの規模で試験栽培が開始されました。" },
+      { q: "明治41年(1908年)4月に香川県小豆島の栽培試験地に植えられたオリーブ苗木は何本か", options: ["419本", "519本", "619本", "719本"], answer: 1, exp: "明治41年4月22日、小豆島（西村）に519本が植栽されました。" },
+      { q: "明治40年(1907年)に、アメリカから小豆島に導入されたオリーブ品種のうち確認されている2品種はどれか", options: ["ルッカとマンザニロ", "マンザニロとネバディロ・ブランコ", "ネバディロ・ブランコとミッション", "ミッションとマンザニロ"], answer: 2, exp: "アメリカのカリフォルニア州からネバディロ・ブランコとミッションの2品種が導入されました。" },
+      { q: "明治32年(1899年)に発足した香川県農事試験場の初代場長は誰か", options: ["佐野常民", "福家梅太郎", "前田正名", "水野邦次郎"], answer: 1, exp: "香川県農事試験場の創設とともに福家梅太郎が場長に就任しました。" },
+      { q: "大正初期、農事試験場の佐村利兵衛や高重昌治がアメリカの書物の中から見出したオリーブ果実の脱渋技術に使われた薬品はどれか", options: ["苛性ソーダ", "酢酸", "塩酸", "消石灰"], answer: 0, exp: "苛性ソーダによる脱渋技術を見出したことで、日本における果実加工は一歩を踏み出しました。" },
+      { q: "大正11年(1922年)から香川県農事試験場に在籍し、グリーンオリーブの塩蔵の品質向上に努めたのは誰か", options: ["前田正名", "福羽逸人", "佐野常民", "野呂癸巳次郎"], answer: 3, exp: "野呂癸巳次郎は農事試験場に在籍し、塩蔵の品質向上に大きく貢献しました。" },
+      { q: "昭和26年(1951年)に発足した香川県農業試験場小豆分場の初代分場長であり、日本のオリーブ研究分野で初めて農学博士の学位を取得したのは誰か", options: ["尾崎元扶", "三木隼人", "水野邦次郎", "笠井宣弘"], answer: 0, exp: "尾崎元扶は自家不和合性の解明など多くの問題を解決し、栽培の基盤を構築しました。" },
+      { q: "日本国内におけるオリーブ栽培が急激に減少する原因の1つとなった、昭和34年(1959年)に始まった出来事はどれか", options: ["エンドリン乳剤が使用禁止", "害虫による被害が増加", "オリーブオイルの価格が高騰", "オリーブ製品の輸入自由化"], answer: 3, exp: "輸入自由化により、安価な海外製品が大量に輸入され国内価格が低迷しました。" },
+      { q: "オリーブ栽培が急激に減少する中、小豆島のオリーブ生産は「新漬け」として生き延びた。新漬けの説明として誤っているものはどれか", options: ["乳酸発酵によって酸味のある味付けである", "渋抜き後、塩水で調味しただけの浅漬けである", "傷をつけないよう手摘みで収穫されている", "熟度の低い黄緑色果実が適している"], answer: 0, exp: "新漬けは未発酵タイプの漬物です。乳酸発酵させるものではありません。" },
+      { q: "平成29年(2017年)の小豆郡内のオリーブ果実収穫量が、それまでの最高収穫量を更新したが、何トンだったか", options: ["350トン", "375トン", "400トン", "425トン"], answer: 3, exp: "平成29年に425tとなり、昭和39年の最高記録(405t)を更新しました。" },
+      { q: "小豆島のオリーブを日本に広く知れ渡らせることとなった画家は誰か", options: ["猪熊弦一郎", "竹久夢二", "小磯良平", "横山大観"], answer: 0, exp: "猪熊弦一郎は小豆島の美しい風景に魅せられ、オリーブを広く知れ渡らせました。" },
+      { q: "オリーブを守る会(小豆島)が制定した「オリーブの日」は何月何日か", options: ["1月15日", "3月15日", "5月15日", "7月15日"], answer: 1, exp: "昭和47年に「オリーブを守る会」が結成され、3月15日をオリーブの日と定めました。" },
+      { q: "小豆島町には、全国の地方公共団体で唯一の課である「オリーブ課」があるが、誕生した年はいつか", options: ["平成18年(2006年)", "平成19年(2007年)", "平成20年(2008年)", "平成21年(2009年)"], answer: 2, exp: "平成20年に商工観光課内に設置していたオリーブ室が課に昇格しました。" },
+      { q: "平成29年(2017年)の小豆郡内の栽培面積は約何haであったか", options: ["約34ha", "約53ha", "約98ha", "約143ha"], answer: 3, exp: "昭和61年には約33haまで減少しましたが、平成29年には約143haとなりました。" },
+      { q: "小豆島にオリーブが植栽されてから100周年を機に、平成22年(2010年)に立ち上げられたプロジェクトはどれか", options: ["香川県オリーブ品評会(園地部門)", "香川県オリーブ品評会(オリーブオイル部門)", "小豆島オリーブ検定", "小豆島オリーブトップワンプロジェクト"], answer: 3, exp: "「小豆島」のブランド力を高めることを目標に、平成22年にトップワンプロジェクトが立ち上げられました。" },
+      { q: "小豆島産オリーブオイルが初めて入賞した国外の品評会はどれか", options: ["JOOP国際オリーブオイル・コンテスト", "ロンドン国際オリーブオイルコンテスト", "ロサンゼルス国際エキストラバージンオリーブオイル品評会", "BIOL国際オーガニックオリーブオイルコンテスト"], answer: 2, exp: "平成17(2005)年に、国産オイルとして国内で初めて入賞しました。" },
+      { q: "オリーブが香川県の「県花」に選ばれたのはいつか", options: ["昭和29年(1954年)", "昭和41年(1966年)", "昭和60年(1985年)", "平成8年(1996年)"], answer: 0, exp: "県花は昭和29年、県木は昭和41年、島花・島木は昭和60年に選定されました。" },
+      { q: "オリーブが小豆島の「島花・島木」に選ばれたのはいつか", options: ["昭和29年(1954年)", "昭和41年(1966年)", "昭和60年(1985年)", "平成2年(1990年)"], answer: 2, exp: "島花・島木は昭和60年(1985年)に選定されました。" }
+    ],
+    ecology: [
+      { q: "オリーブ樹は何科の植物か", options: ["モクセイ科", "サクラソウ科", "オリーブ科", "ヒノキ科"], answer: 0, exp: "オリーブ樹は、モクセイ科オリーブ属に属する常緑樹です。" },
+      { q: "小豆島におけるオリーブの開花時期はいつごろか", options: ["3月下旬から4月上旬", "4月下旬から5月上旬", "5月下旬から6月上旬", "6月下旬から7月上旬"], answer: 2, exp: "5月中旬に花器が完成し、5月下旬から6月上旬にかけて開花します。" },
+      { q: "オリーブの花冠の色は何色か", options: ["桜色", "藤色", "乳白色", "山吹色"], answer: 2, exp: "1つの小花は、直径3mm程度の乳白色をした4片の合弁花冠です。" },
+      { q: "オリーブの葉裏の色として例えられるのは何色か", options: ["銀白色", "乳白色", "紫色", "黄色"], answer: 0, exp: "裏面は密生した毛茸（もうじ）で銀白色になっています。" },
+      { q: "オリーブの花は、いくつの雌ずい(めしべ)と雄ずい(おしべ)を持っているか", options: ["1つのめしべと2つのおしべ", "2つのめしべと1つのおしべ", "1つのめしべと1つのおしべ", "2つのめしべと2つのおしべ"], answer: 0, exp: "オリーブの花は、1つのめしべ（雌ずい）と2つのおしべ（雄ずい）を持っています。" },
+      { q: "オリーブ樹の寿命は長いと言われているが、地中海沿岸では長いもので樹齢何年の樹が現存しているか", options: ["数百年", "数千年", "数万年", "数十万年"], answer: 1, exp: "樹齢は極めて長く、地中海沿岸では数千年を超える老樹も現存しています。" },
+      { q: "オリーブは、自家不和合性が強いとされているが、これはどのような性質か", options: ["厳しい環境に適応できる", "おしべとめしべの区別がない", "受粉の必要がない", "自家受粉では結実しにくい"], answer: 3, exp: "自家不和合性とは、自家受粉では受精できず結実しにくい性質のことです。" },
+      { q: "主要4品種の中で、花粉が非常に多いため受粉樹としての価値が高い品種はどれか", options: ["ミッション", "ルッカ", "マンザニロ", "ネバディロ・ブランコ"], answer: 3, exp: "ネバディロ・ブランコは不完全花が多発しますが、花粉が非常に多いため受粉樹に向いています。" },
+      { q: "主要4品種の中で、テーブルオリーブ用のスペイン原産品種はどれか", options: ["ミッション", "ルッカ", "マンザニロ", "ネバディロ・ブランコ"], answer: 2, exp: "マンザニロはスペイン原産で、果実が大きく品質も良好ですが風害や炭疽病に弱いです。" },
+      { q: "主要4品種の中で、テーブルオリーブ用、オイル用兼用の最主要品種はどれか", options: ["ミッション", "ルッカ", "マンザニロ", "ネバディロ・ブランコ"], answer: 0, exp: "ミッションはアメリカから導入された、国内の最主要品種です。" },
+      { q: "主要4品種の中で、炭疽病への抵抗性の高いオイル専用品種はどれか", options: ["ミッション", "ルッカ", "マンザニロ", "ネバディロ・ブランコ"], answer: 1, exp: "ルッカは耐寒性・耐病性に優れ、炭疽病への抵抗性も高い品種です。" },
+      { q: "ジャンボ・カラマタという品種の導入元はどことされているか", options: ["アメリカ合衆国", "イタリア", "オーストラリア", "スペイン"], answer: 2, exp: "ジャンボ・カラマタはオーストラリアから導入されました。" },
+      { q: "次のうち、スペインで栽培されている代表的品種はどれか", options: ["フラントイオ", "ピクアル", "カラマタ", "コロネイキ"], answer: 1, exp: "ピクアル・アルベキナはスペイン、フラントイオはイタリア、カラマタはギリシャの代表品種です。" },
+      { q: "次のうち、ギリシャで栽培されている代表的品種はどれか", options: ["ピクアル", "コロネイキ", "モライオロ", "アルベキナ"], answer: 1, exp: "コロネイキとカラマタはギリシャの代表的な品種です。" },
+      { q: "次のうち、イタリアで栽培されている代表的品種はどれか", options: ["ピクアル", "コロネイキ", "フラントイオ", "アルベキナ"], answer: 2, exp: "フラントイオ、モライオロ、コラティーナはイタリアの代表的な品種です。" },
+      { q: "国連食糧農業機関(FAO)の調査では、オリーブの品種数は何品種確認されたか", options: ["1,150種", "1,275種", "1,375種", "1,450種"], answer: 1, exp: "FAOの調査では、1,275種が確認されています。" },
+      { q: "香川県農業試験場小豆オリーブ研究所では、平成30年(2018年)の時点で何品種が保存されていたか", options: ["約4品種", "約50品種", "約100品種", "約1,000品種以上"], answer: 1, exp: "平成30年3月時点で、53品種（約50品種）が保存されていました。" },
+      { q: "オリーブ栽培に適した年平均気温は何℃と言われているか", options: ["6℃〜8℃", "10℃〜12℃", "14℃〜16℃", "20℃〜25℃"], answer: 2, exp: "年平均気温14℃〜16℃の温暖地が適当とされています。" },
+      { q: "オリーブ栽培に望ましいとされている年間の日照時間はどれか", options: ["500時間程度", "1,000時間程度", "1,500時間程度", "2,000時間以上"], answer: 3, exp: "日照量が多いほど生育がよく、年間2,000時間以上が望ましいです。" },
+      { q: "オリーブは乾燥を好むとされているが、良好な生育等に必要とされている年間降水量はどれか", options: ["100mm以下", "500mm程度", "1,000mm程度", "2,000mm以上"], answer: 2, exp: "順調な果実の成長のためには、年間1,000mm程度の適度な降水量が必要です。" },
+      { q: "オリーブ栽培に適するとされている土壌条件はどれか", options: ["地下水位が高い低湿地", "耕土の浅い痩せ地", "排水しにくい重粘土", "保水力に富んだ排水しやすい肥沃地"], answer: 3, exp: "保水力に富んだ排水しやすい肥沃地では、収穫量・品質ともに安定します。" },
+      { q: "冬から春先の平均気温が何℃以下でないと、オリーブ樹の花芽がつきにくいと言われているか", options: ["0℃以下", "5℃以下", "10℃以下", "15℃以下"], answer: 2, exp: "10℃以下でないと花芽が付きにくくなり、15℃以上になると着花しないと言われています。" },
+      { q: "オリーブ樹についての記述で正しいものはどれか", options: ["晩秋時の霜は果実に傷をつける", "落葉樹である", "風害を受けにくい", "根が強く、倒木しにくい"], answer: 0, exp: "オリーブは常緑樹で根が浅くもろいため、風害や倒木の被害を受けやすいです。晩秋の霜も果実を傷つけます。" },
+      { q: "日本のオリーブ栽培の天敵であるオリーブアナアキゾウムシについての記述で正しいものはどれか", options: ["栽培開始時から5年後に存在が確認された", "当初から「オリーブアナアキゾウムシ」と呼ばれていた", "成虫の生存期間は3〜4年間である", "冬期も休眠せずに活動を続ける"], answer: 2, exp: "栽培開始からわずか2年後には確認され、当時は象鼻虫（ゾウビチュウ）と呼ばれていました。生存期間は3〜4年です。" },
+      { q: "オリーブアナアキゾウムシの防除に用いられる薬剤はどれか", options: ["トップジンM水和剤", "ICボルドー66D", "アミスター10フロアブル", "スミチオン乳剤"], answer: 3, exp: "薬剤散布の1例として、スミチオン乳剤の50倍液を使用します。" },
+      { q: "春季は新梢と花、秋季は新梢と果実を食害し、葉の先を糸で巻き込むのが特徴の虫はどれか", options: ["マエアカスカシノメイガ", "コウモリガ", "コガネムシ", "カイガラムシ"], answer: 0, exp: "別名ハマキムシとも呼ばれ、葉の先を糸で巻き込む特徴があります。" },
+      { q: "炭疽病の説明について、誤っているものはどれか", options: ["生育適温は25℃〜28℃で比較的高温を好む", "サーモンピンク色の胞子を形成", "糸状菌(カビ)が感染することで発病", "幹に5〜25mm程度のコブを形成"], answer: 3, exp: "幹にコブを形成するのは「がんしゅ病」です。炭疽病はカビが原因で果実を褐色に腐敗させます。" },
+      { q: "炭疽病の予防策として、誤っているものはどれか", options: ["日当たりをよくする", "植栽間隔を狭くする", "風通しを良くする", "水はけの悪い圃地では排水路を作る"], answer: 1, exp: "予防の基本は日当たりと風通しを良好にすることであり、密植（植栽間隔を狭くすること）は避けるべきです。" }
+    ],
+    process: [
+      { q: "小豆島で行われているテーブルオリーブ(新漬け)用果実の収穫方法はどれか", options: ["全自動の収穫機", "手動の収穫機", "親指と人差し指で果柄の上部を掴み、傷つけないように手摘み", "枝から道具を引いて落とす"], answer: 2, exp: "傷つけないように、手の中に優しく包み込んで手摘みで収穫します。" },
+      { q: "小豆島で新漬けに使用されるマンザニロの果実収穫開始時期はいつからか", options: ["7月中旬", "8月中旬", "9月中旬", "10月下旬"], answer: 2, exp: "熟度の低い黄緑色の果実が使用され、マンザニロは9月中旬〜10月上旬が主要収穫期です。" },
+      { q: "香川県の新漬け用果実の出荷規格として誤っているものはどれか", options: ["果実赤道面での横径が14mm以上", "傷がないもの", "赤紫系の着色があるもの", "品種固有の形をしている果実"], answer: 2, exp: "赤紫系の着色がなく、横径14mm以上で傷がない果実が対象となります。" },
+      { q: "小豆島で作られている「新漬け」の一般的な製造方法について、正しいものはどれか", options: ["乳酸発酵させる", "渋抜き後、塩水で調味する", "果実を塩の中で発酵させる", "麹菌で発酵させる"], answer: 1, exp: "高濃度の塩分や乳酸発酵ではなく、渋抜き後に塩水で調味しただけの浅漬けタイプの加工品です。" },
+      { q: "数千年に渡って行われてきた伝統的なオリーブオイルの採油法はどれか", options: ["圧搾法", "遠心分離法", "有機溶剤抽出法", "パーコレーション法"], answer: 0, exp: "圧搾法は数千年来行われてきた伝統的な採油法で、1970年代中頃まで主流でした。" },
+      { q: "オリーブオイルの採油法の1つである遠心分離法について、誤っているものはどれか", options: ["処理能力が高く品質劣化を抑えられる", "マットなどの資材を使うので、オイルが汚染される危険性が低い", "工程が連続式で、所要労力が少なくて済む", "他の金属イオンの影響を受けない"], answer: 1, exp: "遠心分離法はマットなどの資材を「使わない」ため、汚染される危険性が低くなります。" },
+      { q: "他の植物油と比較したオリーブオイル製造上の特徴として正しいものはどれか", options: ["種子から採る", "加熱処理する", "果肉から採る", "有機溶剤を使う"], answer: 2, exp: "加熱処理も化学処理も施さず、果実（果肉）から自然のまま採りだすのが特徴です。" },
+      { q: "IOCによる基準において、最も品質が高い区分のオリーブオイルの名称はどれか", options: ["エキストラ・バージン・オリーブオイル", "ランパンテ・バージン・オリーブオイル", "オーディナリー・バージン・オリーブオイル", "ファイン・バージン・オリーブオイル"], answer: 0, exp: "遊離酸度が0.80%以下などの厳しい基準をクリアした最高品質のオイルです。" },
+      { q: "IOCの基準において、エキストラ・バージン・オリーブオイルの遊離酸度はオレイン酸換算で100g中何g以下とされているか", options: ["0.10g以下", "0.80g以下", "1.20g以下", "3.30g以下"], answer: 1, exp: "遊離酸度が100g中0.80g（0.80%）以下であることが条件の一つです。" },
+      { q: "IOC基準において、オリーブの採油粕を溶剤で処理したオイルの区分はどれか", options: ["エキストラ・バージン・オリーブオイル", "オーディナリー・バージン・オリーブオイル", "ランパンテ・バージン・オリーブオイル", "オリーブポマスオイル"], answer: 3, exp: "ポマス（採油粕）を溶媒などで処理して得られるオイルのことです。" },
+      { q: "かがわオリーブオイル品質評価・適合表示制度において、プレミアム基準の酸度は何%以下とされているか", options: ["0.20%以下", "0.30%以下", "0.50%以下", "0.80%以下"], answer: 0, exp: "香川県独自の厳しい基準で、プレミアムは酸度0.20%以下と定められています。" },
+      { q: "オリーブオイルに多く含まれる一価不飽和脂肪酸はどれか", options: ["ドコサヘキサエン酸", "リノレン酸", "オレイン酸", "リノール酸"], answer: 2, exp: "オリーブオイルの脂肪酸のうち、約55〜83%をオレイン酸が占めます。" },
+      { q: "オリーブオイルに最も豊富に含まれるとされるビタミンはどれか", options: ["ビタミンA", "ビタミンC", "ビタミンD", "ビタミンE"], answer: 3, exp: "オリーブオイルはビタミンEやベータカロテンなどの抗酸化物質を豊富に含んでいます。" },
+      { q: "オリーブオイルにあると考えられる医学的効果について、誤っているものはどれか", options: ["皮膚の酸化ストレスを抑制する", "インスリン感受性を高め、血糖代謝機能を改善させる", "脳の老化を防ぐと言われている", "カルシウムの喪失を促進するので骨粗しょう症の予防になる"], answer: 3, exp: "カルシウムの喪失を促進するのではなく、「吸収を助ける」ことで骨粗しょう症の予防になります。" }
+    ]
+  };
+  /* ========================================================================= */
+
+  const MODE_NAMES = {
+    history: `<i data-lucide="book-open" class="icon-xs" style="margin-right:2px;"></i> 歴史編`,
+    ecology: `<i data-lucide="leaf" class="icon-xs" style="margin-right:2px;"></i> 生態編`,
+    process: `<i data-lucide="droplets" class="icon-xs" style="margin-right:2px;"></i> 加工編`
+  };
+
+  class SoundFX {
+    constructor() {
+      this.enabled = true;
+      this.ctx = null;
+    }
+    init() {
+      if (!this.ctx) {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+    playTone(freq, type, duration, delay = 0) {
+      if (!this.enabled) return;
+      this.init();
+      setTimeout(() => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      }, delay * 1000);
+    }
+    correct() {
+      this.playTone(523.25, "sine", 0.15, 0);
+      this.playTone(659.25, "sine", 0.25, 0.12);
+    }
+    wrong() {
+      this.playTone(240, "triangle", 0.2, 0);
+      this.playTone(180, "triangle", 0.3, 0.15);
+    }
+    fanfare() {
+      if (!this.enabled) return;
+      this.playTone(523.25, "sine", 0.12, 0);       
+      this.playTone(659.25, "sine", 0.12, 0.12);    
+      this.playTone(783.99, "sine", 0.12, 0.24);    
+      this.playTone(1046.50, "triangle", 0.5, 0.36);
+    }
+    clear() {
+      if (!this.enabled) return;
+      this.playTone(523.25, "sine", 0.15, 0);       
+      this.playTone(659.25, "sine", 0.15, 0.15);    
+      this.playTone(783.99, "sine", 0.4, 0.3);      
+    }
+    tryAgain() {
+      if (!this.enabled) return;
+      this.playTone(392.00, "triangle", 0.15, 0);   
+      this.playTone(329.63, "triangle", 0.15, 0.15); 
+      this.playTone(261.63, "triangle", 0.4, 0.3);   
+    }
+    sad() {
+      if (!this.enabled) return;
+      this.playTone(329.63, "sawtooth", 0.25, 0);   
+      this.playTone(311.13, "sawtooth", 0.25, 0.2); 
+      this.playTone(293.66, "sawtooth", 0.5, 0.4);  
+    }
+  }
+
+  const sfx = new SoundFX();
+  const soundBtn = document.getElementById("soundToggleBtn");
+  const soundIcon = document.getElementById("soundIcon");
+  soundBtn.addEventListener("click", () => {
+    sfx.enabled = !sfx.enabled;
+    soundIcon.setAttribute("data-lucide", sfx.enabled ? "volume-2" : "volume-x");
+    lucide.createIcons();
+  });
+
+  let confettiAnimId = null;
+  function launchConfetti() {
+    const canvas = document.getElementById("confettiCanvas");
+    const ctx = canvas.getContext("2d");
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    const colors = ["#F59E0B", "#10B981", "#EF4444", "#3B82F6", "#8B5CF6", "#FDE047"];
+    const particles = [];
+    const count = 75;
+
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: canvas.width / 2 + (Math.random() * 40 - 20),
+        y: canvas.height * 0.3,
+        vx: (Math.random() - 0.5) * 14,
+        vy: -Math.random() * 11 - 4,
+        size: Math.random() * 7 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360,
+        rSpeed: (Math.random() - 0.5) * 12,
+        opacity: 1,
+        gravity: 0.38
+      });
+    }
+
+    if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+
+    function frame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.vx *= 0.98;
+        p.rotation += p.rSpeed;
+        if (p.y > canvas.height * 0.5) {
+          p.opacity -= 0.015;
+        }
+
+        if (p.opacity > 0 && p.y < canvas.height) {
+          alive = true;
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, p.opacity);
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          ctx.restore();
+        }
+      });
+
+      if (alive) {
+        confettiAnimId = requestAnimationFrame(frame);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+    confettiAnimId = requestAnimationFrame(frame);
+  }
+
+  /* === カスタムモーダル関連の変数と関数 === */
+  const customModal = document.getElementById("customModal");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalMessage = document.getElementById("modalMessage");
+  const modalCancelBtn = document.getElementById("modalCancelBtn");
+  const modalConfirmBtn = document.getElementById("modalConfirmBtn");
+
+  let modalConfirmCallback = null;
+  let modalCancelCallback = null;
+
+  function showModal(title, message, confirmText, onConfirm, onCancel = null) {
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modalConfirmBtn.innerHTML = confirmText;
+    
+    lucide.createIcons();
+
+    modalConfirmCallback = onConfirm;
+    modalCancelCallback = onCancel;
+    
+    customModal.classList.add("active");
+  }
+
+  function hideModal() {
+    customModal.classList.remove("active");
+    modalConfirmCallback = null;
+    modalCancelCallback = null;
+  }
+
+  modalCancelBtn.addEventListener("click", () => {
+    if (modalCancelCallback) modalCancelCallback();
+    hideModal();
+  });
+
+  modalConfirmBtn.addEventListener("click", () => {
+    if (modalConfirmCallback) modalConfirmCallback();
+    hideModal();
+  });
+
+
+  let selectedMode = "history";
+  let selectedCount = 5;
+  let isRetire = false;
+  
+  let currentCorrectIndex = -1;
+  let timeoutCount = 0;
+  let questionTimer = null;
+  let autoNextTimer = null;
+
+  document.querySelectorAll(".mode-card").forEach(card => {
+    card.addEventListener("click", () => {
+      document.querySelectorAll(".mode-card").forEach(c => c.classList.remove("selected"));
+      card.classList.add("selected");
+      selectedMode = card.dataset.mode;
+    });
+  });
+
+  document.querySelectorAll(".count-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".count-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selectedCount = btn.dataset.count === "all" ? "all" : parseInt(btn.dataset.count);
+    });
+  });
+
+  let currentQuestions = [];
+  let currentIndex = 0;
+  let score = 0;
+  let wrongCount = 0;
+  let userHistory = [];
+
+  const startScreen = document.getElementById("startScreen");
+  const quizScreen = document.getElementById("quizScreen");
+  const resultScreen = document.getElementById("resultScreen");
+
+  const quizModeBadge = document.getElementById("quizModeBadge");
+  const trackCorrectText = document.getElementById("trackCorrect");
+  const trackWrongText = document.getElementById("trackWrong");
+  const quizProgressText = document.getElementById("quizProgressText");
+  const progressFill = document.getElementById("progressFill");
+  const questionText = document.getElementById("questionText");
+  const optionsContainer = document.getElementById("optionsContainer");
+  const feedbackBox = document.getElementById("feedbackBox");
+  const feedbackStatus = document.getElementById("feedbackStatus");
+  const feedbackText = document.getElementById("feedbackText");
+  const nextBtn = document.getElementById("nextBtn");
+
+  function forceResetToStart() {
+    clearTimeout(questionTimer);
+    clearTimeout(autoNextTimer);
+    quizScreen.classList.remove("active");
+    resultScreen.classList.remove("active");
+    startScreen.classList.add("active");
+    timeoutCount = 0;
+  }
+
+  document.getElementById("startBtn").addEventListener("click", () => {
+    triggerAnimation(selectedMode, false, () => {
+      const rawList = QUESTION_BANK[selectedMode];
+      const shuffled = shuffle(rawList);
+      const count = selectedCount === "all" ? shuffled.length : Math.min(selectedCount, shuffled.length);
+      currentQuestions = shuffled.slice(0, count);
+
+      currentIndex = 0;
+      score = 0;
+      wrongCount = 0;
+      userHistory = [];
+      isRetire = false;
+      timeoutCount = 0;
+
+      quizModeBadge.innerHTML = MODE_NAMES[selectedMode];
+      lucide.createIcons();
+      trackCorrectText.textContent = "0";
+      trackWrongText.textContent = "0";
+
+      startScreen.classList.remove("active");
+      resultScreen.classList.remove("active");
+      quizScreen.classList.add("active");
+
+      loadQuestion();
+    });
+  });
+
+  document.getElementById("retireBtn").addEventListener("click", () => {
+    clearTimeout(questionTimer);
+    clearTimeout(autoNextTimer);
+
+    if (userHistory.length === 0) {
+      showModal(
+        "トップに戻りますか？", 
+        "まだ1問も解答していません。\nトップ画面に戻ります。", 
+        "戻る",
+        () => {
+          forceResetToStart();
+        },
+        () => {
+          questionTimer = setTimeout(handleTimeout, 45000);
+        }
+      );
+      return;
+    }
+    
+    showModal(
+      "リタイアしますか？", 
+      "ここでリタイアして、\n現在までの成績で結果を見ますか？", 
+      "リタイアする",
+      () => {
+        isRetire = true;
+        showResults();
+      },
+      () => {
+        questionTimer = setTimeout(handleTimeout, 45000);
+      }
+    );
+  });
+
+  function loadQuestion() {
+    clearTimeout(questionTimer);
+    clearTimeout(autoNextTimer);
+
+    const q = currentQuestions[currentIndex];
+    quizProgressText.textContent = `第 ${currentIndex + 1} 問 / ${currentQuestions.length}問`;
+    progressFill.style.width = `${(currentIndex / currentQuestions.length) * 100}%`;
+
+    questionText.textContent = q.q;
+    optionsContainer.innerHTML = "";
+    feedbackBox.style.display = "none";
+    nextBtn.style.display = "none";
+
+    let shuffledOptions = q.options.map((opt, idx) => ({ text: opt, originalIdx: idx }));
+    shuffledOptions = shuffle(shuffledOptions);
+    const correctIndex = shuffledOptions.findIndex(o => o.originalIdx === q.answer);
+    currentCorrectIndex = correctIndex;
+
+    shuffledOptions.forEach((optObj, displayIdx) => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.innerHTML = `<span class="option-num">${displayIdx + 1}</span> <span>${optObj.text}</span>`;
+      btn.addEventListener("click", () => handleAnswer(displayIdx, correctIndex));
+      optionsContainer.appendChild(btn);
+    });
+
+    questionTimer = setTimeout(handleTimeout, 45000);
+  }
+
+  function handleTimeout() {
+    timeoutCount++;
+    if (timeoutCount >= 3) {
+      forceResetToStart();
+    } else {
+      handleAnswer(-1, currentCorrectIndex, true);
+    }
+  }
+
+  function handleAnswer(selectedIndex, correctIndex, isTimeout = false) {
+    clearTimeout(questionTimer);
+    clearTimeout(autoNextTimer);
+    
+    if (!isTimeout) {
+      timeoutCount = 0; 
+    }
+
+    const q = currentQuestions[currentIndex];
+    const isCorrect = selectedIndex === correctIndex;
+    const buttons = optionsContainer.querySelectorAll(".option-btn");
+
+    buttons.forEach((btn, idx) => {
+      btn.disabled = true;
+      if (idx === correctIndex) {
+        btn.classList.add("correct");
+        if (isCorrect && !isTimeout) {
+          btn.classList.add("anim-correct-shine");
+        }
+      } else if (idx === selectedIndex && !isTimeout) {
+        btn.classList.add("wrong");
+        btn.classList.add("anim-wrong-shake");
+      }
+    });
+
+    if (isCorrect && !isTimeout) {
+      score++;
+      trackCorrectText.textContent = score;
+      sfx.correct();
+      feedbackStatus.innerHTML = `<i data-lucide="check-circle-2" class="icon-md"></i> 正解！`;
+      feedbackStatus.className = "feedback-status is-correct";
+    } else {
+      wrongCount++;
+      trackWrongText.textContent = wrongCount;
+      sfx.wrong();
+      if (isTimeout) {
+        feedbackStatus.innerHTML = `<i data-lucide="clock" class="icon-md"></i> 時間切れ...`;
+      } else {
+        feedbackStatus.innerHTML = `<i data-lucide="x-circle" class="icon-md"></i> 不正解...`;
+      }
+      feedbackStatus.className = "feedback-status is-wrong";
+      
+      quizScreen.classList.add("anim-screen-droop");
+      setTimeout(() => quizScreen.classList.remove("anim-screen-droop"), 500);
+    }
+    
+    lucide.createIcons();
+
+    userHistory.push({
+      question: q.q,
+      isCorrect: isCorrect,
+      correctText: q.options[q.answer],
+      exp: q.exp
+    });
+
+    feedbackText.textContent = q.exp;
+    feedbackBox.style.display = "block";
+    nextBtn.style.display = "block";
+
+    if (isTimeout) {
+      autoNextTimer = setTimeout(() => {
+        nextBtn.click();
+      }, 3500); 
+    }
+  }
+
+  nextBtn.addEventListener("click", () => {
+    currentIndex++;
+    if (currentIndex < currentQuestions.length) {
+      loadQuestion();
+    } else {
+      showResults();
+    }
+  });
+
+  function showResults() {
+    quizScreen.classList.remove("active");
+    resultScreen.classList.add("active");
+
+    const total = currentQuestions.length;
+    const rate = total === 0 ? 0 : Math.round((score / total) * 100);
+
+    const scoreEl = document.getElementById("finalScore");
+    scoreEl.textContent = `${rate}%`;
+    
+    scoreEl.classList.remove("text-gold", "text-silver", "text-bronze", "text-iron");
+    
+    document.getElementById("finalScoreRatio").textContent = `${score} / ${total} 問 正解`;
+
+    const titleEl = document.getElementById("resultTitle");
+    const descEl = document.getElementById("resultDesc");
+    const charWrap = document.getElementById("resultCharacterWrap");
+    const charImg = document.getElementById("resultCharacterImg");
+    const rankEl = document.getElementById("rankTitle");
+
+    charWrap.className = "character-wrap";
+    rankEl.style.display = "none";
+    void charWrap.offsetWidth;
+
+    /* == クラスや称号は元の仕様をそのまま維持 == */
+    if (selectedCount === "all" && !isRetire) {
+      if (rate === 100) {
+        charImg.src = "perfect.png";
+        charWrap.classList.add("show-perfect-all", "char-bounce");
+        scoreEl.classList.add("text-gold");
+        rankEl.innerHTML = `<i data-lucide="crown" class="icon-md"></i> 称号：グランドマスター`;
+        rankEl.style.display = "flex";
+        rankEl.style.color = "#D97706";
+        titleEl.innerHTML = `<i data-lucide="party-popper" class="icon-lg"></i> 完全制覇！ <i data-lucide="party-popper" class="icon-lg"></i>`;
+        descEl.innerHTML = `全問正解という偉業を達成しました！あなたこそ真のオリーブのグランドマスターです！<i data-lucide="sparkles" class="icon-sm"></i>`;
+        launchConfetti();
+        sfx.fanfare();
+      } else if (rate >= 50) {
+        charImg.src = "good.png";
+        charWrap.classList.add("show-good-all", "char-bounce");
+        scoreEl.classList.add("text-silver");
+        rankEl.innerHTML = `<i data-lucide="award" class="icon-md"></i> 称号：オリーブ博士`;
+        rankEl.style.display = "flex";
+        rankEl.style.color = "#475569";
+        titleEl.innerHTML = `素晴らしい！`;
+        descEl.innerHTML = `これだけの問題数でこの正答率は見事です！かなり実力がついていますね！`;
+        sfx.clear();
+      } else if (rate > 0) {
+        charImg.src = "fair.png";
+        charWrap.classList.add("show-fair-all", "char-shake");
+        scoreEl.classList.add("text-bronze");
+        rankEl.innerHTML = `<i data-lucide="medal" class="icon-md"></i> 称号：オリーブ愛好家`;
+        rankEl.style.display = "flex";
+        rankEl.style.color = "#9A3412";
+        titleEl.innerHTML = `なかなかの成績！`;
+        descEl.innerHTML = `長丁場お疲れ様でした！この問題数で得点できたのは立派です。復習してさらに上を目指しましょう！`;
+        sfx.tryAgain();
+      } else {
+        charImg.src = "bad.png";
+        charWrap.classList.add("show-bad-all", "char-droop");
+        scoreEl.classList.add("text-iron");
+        rankEl.innerHTML = `<i data-lucide="sprout" class="icon-md"></i> 称号：オリーブ初心者`;
+        rankEl.style.display = "flex";
+        rankEl.style.color = "#1F2937";
+        titleEl.innerHTML = `ナイストライ！`;
+        descEl.innerHTML = `全問に挑んだその勇気が素晴らしいです！次は必ず得点できるようになりますよ！`;
+        sfx.sad();
+      }
+    } else {
+      rankEl.style.display = "flex";
+      if (rate === 100) {
+        charImg.src = "perfect.png";
+        charWrap.classList.add("show-perfect-std", "char-bounce");
+        scoreEl.classList.add("text-gold");
+        rankEl.innerHTML = `<i data-lucide="crown" class="icon-md"></i> 称号：オリーブマスター`;
+        rankEl.style.color = "#D97706";
+        titleEl.innerHTML = isRetire ? `途中棄権・もう少し！` : `<i data-lucide="party-popper" class="icon-lg"></i> 完璧！天才！ <i data-lucide="party-popper" class="icon-lg"></i>`;
+        descEl.innerHTML = isRetire ? `今回は途中棄権となりました。復習リストを活用して次回は最後まで挑戦してみましょう！` : `満点です！すべての知識が完璧に頭に入っていますね！次はぜひ全問挑戦モードへ！<i data-lucide="sparkles" class="icon-sm"></i>`;
+        if (!isRetire) { launchConfetti(); sfx.fanfare(); } else { sfx.tryAgain(); }
+      } else if (rate >= 50) {
+        charImg.src = "good.png";
+        charWrap.classList.add("show-good-std", "char-bounce");
+        scoreEl.classList.add("text-silver");
+        rankEl.innerHTML = `<i data-lucide="award" class="icon-md"></i> 称号：オリーブマニア`;
+        rankEl.style.color = "#475569";
+        titleEl.innerHTML = isRetire ? `途中棄権・もう少し！` : `合格ラインクリア！`;
+        descEl.innerHTML = isRetire ? `今回は途中棄権となりました。復習リストを活用して次回は最後まで挑戦してみましょう！` : `よくできました！基本的な知識がしっかり身についています！`;
+        if (!isRetire) { sfx.clear(); } else { sfx.tryAgain(); }
+      } else if (rate > 0) {
+        charImg.src = "fair.png";
+        charWrap.classList.add("show-fair-std", "char-shake");
+        scoreEl.classList.add("text-bronze");
+        rankEl.innerHTML = `<i data-lucide="medal" class="icon-md"></i> 称号：オリーブ入門者`;
+        rankEl.style.color = "#9A3412";
+        titleEl.innerHTML = isRetire ? `途中棄権・もう少し！` : `復習して再挑戦！`;
+        descEl.innerHTML = isRetire ? `今回は途中棄権となりました。復習リストを活用して次回は最後まで挑戦してみましょう！` : `解説をじっくり読んでポイントを覚え直しましょう。次はもっとできるはず！`;
+        sfx.tryAgain();
+      } else {
+        charImg.src = "bad.png";
+        charWrap.classList.add("show-bad-std", "char-droop");
+        scoreEl.classList.add("text-iron");
+        rankEl.innerHTML = `<i data-lucide="sprout" class="icon-md"></i> 称号：オリーブ見習い`;
+        rankEl.style.color = "#1F2937";
+        titleEl.innerHTML = isRetire ? `途中棄権・もう少し！` : `基礎から出直そう！`;
+        descEl.innerHTML = isRetire ? `今回は途中棄権となりました。復習リストを活用して次回は最後まで挑戦してみましょう！` : `今回は残念！テキストをもう一度読んで、基礎知識をつけてから再挑戦しましょう！`;
+        if (!isRetire) { sfx.sad(); } else { sfx.tryAgain(); }
+      }
+    }
+
+    const reviewBox = document.getElementById("reviewContainer");
+    reviewBox.innerHTML = `<strong style='display:flex; align-items:center; gap:6px; margin-bottom:12px;'><i data-lucide="book-open-check" class="icon-md"></i> 【今回の復習リスト】</strong>`;
+    
+    userHistory.forEach((h, i) => {
+      const item = document.createElement("div");
+      item.className = "review-item";
+      const icon = h.isCorrect ? 'circle' : 'x';
+      const colorClass = h.isCorrect ? 'tracker-correct' : 'tracker-wrong';
+      item.innerHTML = `
+        <div class="review-q">
+          <span class="${colorClass}" style="flex-shrink:0;"><i data-lucide="${icon}" class="icon-sm"></i></span>
+          <span>問${i + 1}. ${h.question}</span>
+        </div>
+        <div class="review-ans">正解: ${h.correctText}</div>
+        <div class="review-exp">${h.exp}</div>
+      `;
+      reviewBox.appendChild(item);
+    });
+    
+    // 生成したアイコンを描画
+    lucide.createIcons();
+  }
+
+  document.getElementById("retryBtn").addEventListener("click", () => {
+    forceResetToStart();
+  });
+  
+  // 初回読み込み時にアイコンを描画
+  lucide.createIcons();
+</script>
+</body>
+</html>
