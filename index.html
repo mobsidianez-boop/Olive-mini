@@ -35,6 +35,8 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
     }
 
+    html { height: 100%; }
+
     body {
       background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
       color: var(--text);
@@ -42,14 +44,18 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 16px;
-      overflow-x: hidden;
+      min-height: 100dvh;
+      padding: clamp(6px, 1.6vh, 16px);
+      overflow: hidden;
     }
 
     .container {
       background: var(--card-bg);
       max-width: 600px;
       width: 100%;
+      /* ビューポート(または埋め込み先)の高さに必ず収める */
+      max-height: calc(100vh - clamp(12px, 3.2vh, 32px));
+      max-height: calc(100dvh - clamp(12px, 3.2vh, 32px));
       border-radius: var(--radius);
       box-shadow: 0 15px 35px rgba(4, 120, 87, 0.2);
       border: 1px solid var(--border);
@@ -128,7 +134,7 @@
     @keyframes textSlideUp { to { opacity: 1; transform: translateY(0); } }
 
     /* アプリ内ヘッダー */
-    header { background: var(--primary); color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+    header { background: var(--primary); color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; }
     .header-logo-group { display: flex; align-items: center; gap: 12px; }
     
     .header-svg-container { position: relative; width: 44px; height: 44px; }
@@ -142,7 +148,18 @@
     .sound-btn { background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; z-index: 10; }
 
     .screen { padding: 24px; display: none; }
-    .screen.active { display: block; }
+    /* アクティブ画面は残り高さいっぱいに広がり、内容が長い場合のみ内部スクロール */
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
 
     .start-content { text-align: center; padding: 12px 4px 8px; }
     .start-title { font-size: 1.55rem; font-weight: 900; color: var(--primary-dark); margin-bottom: 20px; letter-spacing: -0.5px; }
@@ -328,6 +345,55 @@
     .modal-btn-confirm { background: var(--wrong); color: white; }
     .modal-btn-confirm:hover { background: #BE123C; }
     .modal-btn-confirm:active { transform: scale(0.98); }
+
+    /* 画面内の要素は潰さず、はみ出した分はアクティブ画面側でスクロールさせる */
+    .screen.active > * { flex-shrink: 0; }
+
+    /* === ビューポート高さに応じた調整（1画面に収める） === */
+    @media (max-height: 820px) {
+      .splash-logo-wrap { width: min(280px, 46vh); height: min(262px, 43vh); }
+      .splash-oricchi { width: 78px; height: 78px; }
+    }
+
+    @media (max-height: 800px) {
+      .screen { padding: 16px 18px; }
+      .start-content { padding: 4px 4px 0; }
+      .start-title { font-size: 1.25rem; margin-bottom: 12px; }
+      .start-character-wrap { width: 78px; height: 78px; margin: 4px auto 12px; }
+      .section-label { margin-bottom: 6px; }
+      .mode-selection { gap: 8px; margin-bottom: 14px; }
+      .mode-card { padding: 10px 14px; }
+      .count-selection { margin-bottom: 16px; }
+      .primary-btn { padding: 12px; }
+      .quiz-header { margin-bottom: 8px; }
+      .progress-bar { margin-bottom: 14px; }
+      .question-title { font-size: 1.05rem; margin-bottom: 12px; }
+      .options-grid { gap: 8px; margin-bottom: 12px; }
+      .option-btn { padding: 11px 14px; }
+      .splash-logo-wrap { width: min(240px, 42vh); height: min(225px, 39vh); }
+      .splash-oricchi { width: 66px; height: 66px; }
+      .result-score-info { margin-bottom: 10px; }
+      .score-num { font-size: 3.4rem; }
+      #resultCharacterWrap { width: 210px; height: 210px; margin: 4px auto 12px; }
+      #resultCharacterWrap .character-img { width: 104px; height: 104px; }
+      .review-list { max-height: 170px; }
+    }
+
+    @media (max-height: 680px) {
+      .mode-info-desc { display: none; }
+      .start-character-wrap { width: 68px; height: 68px; margin: 2px auto 10px; }
+      .mode-selection { gap: 6px; }
+      .count-selection { margin-bottom: 12px; }
+    }
+
+    @media (max-height: 560px) {
+      .screen { padding: 12px 14px; }
+      .start-character-wrap { display: none; }
+      .mode-info-desc { display: none; }
+      .splash-logo-wrap { width: min(200px, 40vh); height: min(188px, 37vh); }
+      .splash-oricchi { width: 56px; height: 56px; }
+      .splash-skip-tip { bottom: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -455,7 +521,7 @@
       </div>
     </div>
     <button class="sound-btn" id="soundToggleBtn" title="音のON/OFF">
-      <i data-lucide="volume-2" id="soundIcon" class="icon-md"></i>
+      <i data-lucide="volume-2" class="icon-md"></i>
     </button>
   </header>
 
@@ -683,6 +749,13 @@
     return arr;
   }
 
+  // lucideのCDNが読み込めなかった場合でもアプリ全体が止まらないようにする
+  function refreshIcons() {
+    if (window.lucide && typeof window.lucide.createIcons === "function") {
+      window.lucide.createIcons();
+    }
+  }
+
   /* 演出アニメーション関係 */
   const MODE_TITLES = {
     init:    { p1: "検", p2: "定", sub: "OLIVE KENTEI" },
@@ -838,24 +911,47 @@
     }
     init() {
       if (!this.ctx) {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        this.ctx = new AC();
       }
+      if (this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
+      return this.ctx;
+    }
+    // ブラウザの自動再生制限を解除する（初回のユーザー操作で呼び出す）
+    unlock() {
+      const ctx = this.init();
+      if (!ctx) return;
+      if (ctx.state !== "running") {
+        ctx.resume().catch(() => {});
+      }
+      // iOS Safari 対策: 無音バッファを1回再生してロックを外す
+      try {
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+      } catch (e) {}
     }
     playTone(freq, type, duration, delay = 0) {
       if (!this.enabled) return;
-      this.init();
-      setTimeout(() => {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + duration);
-      }, delay * 1000);
+      const ctx = this.init();
+      if (!ctx || ctx.state === "closed") return;
+      // setTimeoutではなくオーディオ時刻で予約する（タブ非アクティブ時のズレ防止）
+      const startAt = ctx.currentTime + delay;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, startAt);
+      gain.gain.setValueAtTime(0.12, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.001, startAt + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startAt);
+      osc.stop(startAt + duration);
     }
     correct() {
       this.playTone(523.25, "sine", 0.15, 0);
@@ -893,13 +989,36 @@
   }
 
   const sfx = new SoundFX();
+
+  // 最初のユーザー操作でオーディオを有効化（iOS/Chromeなどの自動再生制限対策）
+  const audioUnlockEvents = ["pointerdown", "touchend", "mousedown", "keydown"];
+  function unlockAudio() {
+    sfx.unlock();
+    audioUnlockEvents.forEach(e => window.removeEventListener(e, unlockAudio));
+  }
+  audioUnlockEvents.forEach(e => window.addEventListener(e, unlockAudio, { passive: true }));
+
+  // タブ復帰時にAudioContextが中断されていたら再開する
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && sfx.ctx && sfx.ctx.state === "suspended") {
+      sfx.ctx.resume().catch(() => {});
+    }
+  });
+
   const soundBtn = document.getElementById("soundToggleBtn");
-  const soundIcon = document.getElementById("soundIcon");
+  // lucideのcreateIconsは <i data-lucide> を <svg> に置換してしまうため、
+  // 毎回ボタンの中身を新しいアイコン要素で描き直す（切り替えが反映されない不具合の対策）
+  function renderSoundIcon() {
+    soundBtn.innerHTML = `<i data-lucide="${sfx.enabled ? "volume-2" : "volume-x"}" class="icon-md"></i>`;
+    soundBtn.title = sfx.enabled ? "音を消す" : "音を出す";
+    refreshIcons();
+  }
   soundBtn.addEventListener("click", () => {
     sfx.enabled = !sfx.enabled;
-    soundIcon.setAttribute("data-lucide", sfx.enabled ? "volume-2" : "volume-x");
-    lucide.createIcons();
+    if (sfx.enabled) sfx.unlock();
+    renderSoundIcon();
   });
+  renderSoundIcon();
 
   let confettiAnimId = null;
   function launchConfetti() {
@@ -980,7 +1099,7 @@
     modalMessage.textContent = message;
     modalConfirmBtn.innerHTML = confirmText;
     
-    lucide.createIcons();
+    refreshIcons();
 
     modalConfirmCallback = onConfirm;
     modalCancelCallback = onCancel;
@@ -1076,7 +1195,7 @@
       timeoutCount = 0;
 
       quizModeBadge.innerHTML = MODE_NAMES[selectedMode];
-      lucide.createIcons();
+      refreshIcons();
       trackCorrectText.textContent = "0";
       trackWrongText.textContent = "0";
 
@@ -1205,7 +1324,7 @@
       setTimeout(() => quizScreen.classList.remove("anim-screen-droop"), 500);
     }
     
-    lucide.createIcons();
+    refreshIcons();
 
     userHistory.push({
       question: q.q,
@@ -1365,7 +1484,7 @@
     });
     
     // 生成したアイコンを描画
-    lucide.createIcons();
+    refreshIcons();
   }
 
   document.getElementById("retryBtn").addEventListener("click", () => {
@@ -1373,7 +1492,7 @@
   });
   
   // 初回読み込み時にアイコンを描画
-  lucide.createIcons();
+  refreshIcons();
 </script>
 </body>
 </html>
